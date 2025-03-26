@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2025/03/17 14:57:45.000.469,=C:\Users\luqui\OneDrive\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2025/03/24 14:52:31.000.306,=C:\Users\luqui\OneDrive\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2025/03/25 20:30:21.000.019,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FLogin.pas=C:\Users\luqui\OneDrive\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2025/03/25 20:30:21.000.019,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FLogin.fmx=C:\Users\luqui\OneDrive\Documents\Embarcadero\Studio\Projects\Unit1.fmx</Transaction>
+    <Transaction>2025/03/25 20:30:32.000.582,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\package\d12\weatherApp.dproj=C:\Users\luqui\OneDrive\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2025/03/26 17:31:35.000.764,=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\package\d12\Unit2.pas</Transaction>
+    <Transaction>2025/03/26 17:58:35.000.467,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\package\d12\Unit2.fmx=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FMain.fmx</Transaction>
+    <Transaction>2025/03/26 17:58:35.000.467,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\package\d12\Unit2.pas=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FMain.pas</Transaction>
+    <Transaction>2025/03/26 17:59:43.000.509,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FLogin.pas=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\ULogin.pas</Transaction>
+    <Transaction>2025/03/26 17:59:43.000.509,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FLogin.fmx=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\ULogin.fmx</Transaction>
+    <Transaction>2025/03/26 17:59:46.000.820,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FMain.pas=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\UMain.pas</Transaction>
+    <Transaction>2025/03/26 17:59:46.000.820,C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\FMain.fmx=C:\Users\luqui\OneDrive\Desktop\Luke\Desarrollos\00 - Delphi - Projects\14-appWeatherFREE\ApiMETEO\frontend-Clima\source\UMain.fmx</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile Android="R7MT401QGNV" Android64="R7MT401QGNV"/>
+	</ActiveMobileDevice>
+</BorlandProject>

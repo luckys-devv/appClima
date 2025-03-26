@@ -1,0 +1,112 @@
+unit FLogin;
+
+interface
+
+uses
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Sensors,
+  System.Sensors.Components, FMX.Layouts, FMX.Edit,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
+  // Unidades clave para permisos en Android
+  System.Permissions,
+  androidapi.Helpers,
+  androidapi.JNI.GraphicsContentViewText,
+  androidapi.JNI.JavaTypes,
+  androidapi.JNIBridge,
+  androidapi.JNI.Os,
+  androidapi.JNI.Location,
+  FMX.Helpers.Android,
+  androidapi.JNI.Net,
+  FMX.Controls.Presentation, FMX.Objects;
+
+type
+  TForm1 = class(TForm)
+    Layout3: TLayout;
+    Label1: TLabel;
+    edtUser: TEdit;
+    Rectangle1: TRectangle;
+    btnAceptar: TSpeedButton;
+    Image1: TImage;
+    procedure edtUserValidate(Sender: TObject; var Text: string);
+    procedure edtPassValidate(Sender: TObject; var Text: string);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+    procedure getPermissions;
+    function isConexionToInternet: Boolean;
+  public
+    { Public declarations }
+    vUbicacion: Boolean;
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.fmx}
+
+procedure TForm1.edtPassValidate(Sender: TObject; var Text: string);
+begin
+  btnAceptar.SetFocus;
+end;
+
+procedure TForm1.edtUserValidate(Sender: TObject; var Text: string);
+begin
+  // edtPass.SetFocus;
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  if isConexionToInternet then
+    ShowMessage('Hay conexion a Internet')
+  else
+    ShowMessage('No hay conexion');
+
+end;
+
+procedure TForm1.getPermissions;
+begin
+  PermissionsService.RequestPermissions
+    (['android.permission.ACCESS_FINE_LOCATION',
+    'android.permission.ACCESS_COARSE_LOCATION'],
+    procedure(const APermissions: TClassicStringDynArray;
+      const AGrantResults: TClassicPermissionStatusDynArray)
+    begin
+      if (Length(AGrantResults) > 0) and
+        (AGrantResults[0] = TPermissionStatus.Granted) then
+      begin
+        ShowMessage('Permiso concedido. Ahora puedes obtener la ubicación.');
+        vUbicacion := true;
+      end
+      else
+      begin
+        ShowMessage('Permiso denegado. ');
+        vUbicacion := false;
+      end;
+
+    end);
+end;
+
+function TForm1.isConexionToInternet: Boolean;
+var
+  ConnectivityManager: JConnectivityManager;
+  ActiveNetworkInfo: JNetworkInfo;
+begin
+  ConnectivityManager := TJConnectivityManager.Wrap
+    (TAndroidHelper.Context.getSystemService
+    (TJContext.JavaClass.CONNECTIVITY_SERVICE));
+
+  if ConnectivityManager <> nil then
+  begin
+    // Obtenemos información de la red activa
+    ActiveNetworkInfo := ConnectivityManager.getActiveNetworkInfo;
+    // Verificamos si no es nula y si está conectada
+    Result := (ActiveNetworkInfo <> nil) and
+      (ActiveNetworkInfo.isConnectedOrConnecting);
+  end
+  else
+    Result := false;
+
+end;
+
+end.
