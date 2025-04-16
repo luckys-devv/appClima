@@ -1,0 +1,19 @@
+program weatherApp;
+
+uses
+  System.StartUpCopy,
+  FMX.Forms,
+  ULogin in '..\..\source\ULogin.pas' {FLogin},
+  UMain in '..\..\source\UMain.pas' {FMain},
+  UPrivacidadGPS in '..\..\source\UPrivacidadGPS.pas' {FPrivacidadGPS},
+  UFfAvisoPermiso in '..\..\source\Frames\UFfAvisoPermiso.pas' {ffAvisoPermiso: TFrame};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TFLogin, FLogin);
+  Application.CreateForm(TFMain, FMain);
+  Application.CreateForm(TFPrivacidadGPS, FPrivacidadGPS);
+  Application.Run;
+end.

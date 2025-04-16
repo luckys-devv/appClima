@@ -4,13 +4,13 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   ULogin in '..\..\source\ULogin.pas' {FLogin},
-  UMain in '..\..\source\UMain.pas' {FMain};
+  UFfAvisoPermiso in '..\..\source\Frames\UFfAvisoPermiso.pas' {ffAvisoPermiso: TFrame},
+  UFunciones in '..\..\source\UFunciones.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TFLogin, FLogin);
-  Application.CreateForm(TFMain, FMain);
   Application.Run;
 end.

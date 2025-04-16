@@ -1,0 +1,220 @@
+unit ULogin;
+
+interface
+
+uses
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Sensors,
+  System.Sensors.Components, FMX.Layouts, FMX.Edit, FMX.Graphics,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
+  // Unidades clave para permisos en Android
+  System.Permissions,
+  androidapi.Helpers,
+  androidapi.JNI.GraphicsContentViewText,
+  androidapi.JNI.JavaTypes,
+  androidapi.JNIBridge,
+  androidapi.JNI.Os,
+  androidapi.JNI.Location,
+  FMX.Helpers.Android,
+  androidapi.JNI.Net,
+  FMX.Controls.Presentation, FMX.Objects, FMX.TabControl;
+
+type
+  TFLogin = class(TForm)
+    TabControl1: TTabControl;
+    tbLogin: TTabItem;
+    tbMain: TTabItem;
+    rcMainBgg: TRectangle;
+    TabItem3: TTabItem;
+    rcLoginBg: TRectangle;
+    Image1: TImage;
+    Layout3: TLayout;
+    Label1: TLabel;
+    edtUser: TEdit;
+    Rectangle3: TRectangle;
+    btnAceptar: TSpeedButton;
+    dia: TButton;
+    noche: TButton;
+    procedure edtUserValidate(Sender: TObject; var Text: string);
+    procedure edtPassValidate(Sender: TObject; var Text: string);
+    procedure FormShow(Sender: TObject);
+    procedure btnAceptarClick(Sender: TObject);
+    procedure diaClick(Sender: TObject);
+    procedure nocheClick(Sender: TObject);
+  private
+    { Private declarations }
+    vUbicacionYaAceptada: Boolean;
+    function getPermissions: Boolean;
+    function isConexionToInternet: Boolean;
+    function isGPSEnabled: Boolean;
+  public
+    { Public declarations }
+
+  end;
+
+var
+  FLogin: TFLogin;
+
+const
+  permAccess = 'android.permission.ACCESS_FINE_LOCATION';
+  permCoarse = 'android.permission.ACCESS_COARSE_LOCATION';
+
+implementation
+
+{$R *.fmx}
+
+uses UFfAvisoPermiso;
+
+procedure TFLogin.btnAceptarClick(Sender: TObject);
+var
+  vFramePermiso: TffAvisoPermiso;
+begin
+
+
+  // TabControl1.ActiveTab := TbMain;
+
+  if not vUbicacionYaAceptada then
+  begin
+    vFramePermiso := TffAvisoPermiso.Create(Self);
+    vFramePermiso.Parent := Self;
+    vFramePermiso.Align := TAlignLayout.center;
+
+    // if getPermissions then
+    // TabControl1.ActiveTab := tbMain;
+
+    vFramePermiso.OnClose := procedure(Respuesta: Boolean)
+      begin
+        if Respuesta then
+        begin
+          if getPermissions then
+            TabControl1.ActiveTab := tbMain;
+
+        end;
+
+      end;
+
+  end
+  else
+    TabControl1.ActiveTab := tbMain;
+end;
+
+procedure TFLogin.diaClick(Sender: TObject);
+begin
+  with rcMainBgg.Fill do
+  begin
+    Kind := TBrushKind.Gradient;
+    Gradient.Style := TGradientStyle.Linear;
+    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
+    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
+
+    Gradient.Color := $FF56CCF2; // Celeste cielo (inicio)
+    Gradient.Color1 := $FF2F80ED; // Azul profundo (fin)
+  end;
+
+end;
+
+procedure TFLogin.edtPassValidate(Sender: TObject; var Text: string);
+begin
+  btnAceptar.SetFocus;
+end;
+
+procedure TFLogin.edtUserValidate(Sender: TObject; var Text: string);
+begin
+  btnAceptar.SetFocus;
+end;
+
+procedure TFLogin.FormShow(Sender: TObject);
+begin
+
+  if isConexionToInternet then
+  begin
+
+    if TPermissionsService.DefaultService.IsEveryPermissionGranted
+      ([permAccess, permCoarse]) then
+      vUbicacionYaAceptada := true
+    else
+      vUbicacionYaAceptada := false;
+
+  end
+  else
+  begin
+    ShowMessage('No hay conexion a internet');
+    exit;
+  end;
+
+end;
+
+function TFLogin.getPermissions: Boolean;
+begin
+  result := false;
+
+  PermissionsService.RequestPermissions
+    (['android.permission.ACCESS_FINE_LOCATION',
+    'android.permission.ACCESS_COARSE_LOCATION'],
+    procedure(const APermissions: TClassicStringDynArray;
+      const AGrantResults: TClassicPermissionStatusDynArray)
+    begin
+      if (Length(AGrantResults) > 0) and
+        (AGrantResults[0] = TPermissionStatus.Granted) then
+        vUbicacionYaAceptada := true
+      else
+        vUbicacionYaAceptada := false;
+
+    end);
+
+  if vUbicacionYaAceptada then
+    result := true;
+
+end;
+
+function TFLogin.isConexionToInternet: Boolean;
+var
+  ConnectivityManager: JConnectivityManager;
+  ActiveNetworkInfo: JNetworkInfo;
+begin
+  ConnectivityManager := TJConnectivityManager.Wrap
+    (TAndroidHelper.Context.getSystemService
+    (TJContext.JavaClass.CONNECTIVITY_SERVICE));
+
+  if ConnectivityManager <> nil then
+  begin
+    // Obtenemos información de la red activa
+    ActiveNetworkInfo := ConnectivityManager.getActiveNetworkInfo;
+    // Verificamos si no es nula y si está conectada
+    result := (ActiveNetworkInfo <> nil) and
+      (ActiveNetworkInfo.isConnectedOrConnecting);
+  end
+  else
+    result := false;
+
+end;
+
+function TFLogin.isGPSEnabled: Boolean;
+var
+  LocationManager: JLocationManager;
+begin
+
+  // Obtiene el servicio de ubicación desde el contexto de Android
+  LocationManager := TJLocationManager.Wrap
+    (TAndroidHelper.Context.getSystemService
+    (TJContext.JavaClass.LOCATION_SERVICE));
+  // Verifica si el proveedor GPS está habilitado
+  result := LocationManager.isProviderEnabled
+    (TJLocationManager.JavaClass.GPS_PROVIDER);
+
+end;
+
+procedure TFLogin.nocheClick(Sender: TObject);
+begin
+    with rcMainBgg.Fill do
+  begin
+    Kind := TBrushKind.Gradient;
+    Gradient.Style := TGradientStyle.Linear;
+    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
+    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
+
+    Gradient.Color := $FF0F2027 ; // Celeste cielo (inicio)
+    Gradient.Color1 := $FF2C5364; // Azul profundo (fin)
+  end;
+end;
+
+end.
