@@ -6,6 +6,8 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Sensors,
   System.Sensors.Components, FMX.Layouts, FMX.Edit, FMX.Graphics,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
+  System.Net.HttpClient, System.Net.URLClient, System.JSON,
+  System.Net.HttpClientComponent,
   // Unidades clave para permisos en Android
   System.Permissions,
   androidapi.Helpers,
@@ -16,7 +18,10 @@ uses
   androidapi.JNI.Location,
   FMX.Helpers.Android,
   androidapi.JNI.Net,
-  FMX.Controls.Presentation, FMX.Objects, FMX.TabControl;
+  FMX.Controls.Presentation, FMX.Objects, System.IOUtils, FMX.TabControl,
+  URDatosClima,
+  FMX.Memo.Types,
+  FMX.ScrollBox, FMX.Memo, System.ImageList, FMX.ImgList;
 
 type
   TFLogin = class(TForm)
@@ -24,7 +29,7 @@ type
     tbLogin: TTabItem;
     tbMain: TTabItem;
     rcMainBgg: TRectangle;
-    TabItem3: TTabItem;
+    tbWarning: TTabItem;
     rcLoginBg: TRectangle;
     Image1: TImage;
     Layout3: TLayout;
@@ -35,27 +40,54 @@ type
     dia: TButton;
     noche: TButton;
     LyClimaActual: TLayout;
-    Layout1: TLayout;
-    Layout2: TLayout;
-    Image2: TImage;
-    Layout4: TLayout;
+    LyTitulo: TLayout;
+    imgWeatherIcon: TImage;
+    LyTemperatura: TLayout;
     edtlat: TEdit;
     edtlng: TEdit;
     LocationSensor1: TLocationSensor;
+    Button1: TButton;
+    ImageList: TImageList;
+    LyTemp_Actual: TLayout;
+    LyTemp_MM: TLayout;
+    lblTempActual: TLabel;
+    lblTempMax: TLabel;
+    lblTempMin: TLabel;
+    lblTitulo: TLabel;
+    Rectangle1: TRectangle;
+    txtAviso: TText;
+    Layout1: TLayout;
+    Image2: TImage;
+    Rectangle2: TRectangle;
+    SpeedButton1: TSpeedButton;
+    LyLoading: TLayout;
+    AniIndicator1: TAniIndicator;
     procedure edtUserValidate(Sender: TObject; var Text: string);
     procedure edtPassValidate(Sender: TObject; var Text: string);
     procedure FormShow(Sender: TObject);
     procedure btnAceptarClick(Sender: TObject);
     procedure diaClick(Sender: TObject);
-    procedure nocheClick(Sender: TObject);
     procedure LocationSensor1LocationChanged(Sender: TObject;
       const OldLocation, NewLocation: TLocationCoord2D);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
+    vLatitudFinal: String;
+    vLongitudfinal: String;
     vUbicacionYaAceptada: Boolean;
+    vClima: Boolean;
     function getPermissions: Boolean;
     function isConexionToInternet: Boolean;
     function isGPSEnabled: Boolean;
+    procedure getClima(ALat, ALng: String);
+    procedure showFrameGPS;
+    procedure loadData(AJsonResponse: TJSONObject);
+    procedure loadBackgroundColor(ADay: Boolean);
+    procedure bcgNight;
+    procedure bcgDay;
+    procedure showData(ADatosClima: RDatosClima);
+    procedure loadingOn;
+    procedure loadingOff;
   public
     { Public declarations }
 
@@ -75,44 +107,83 @@ implementation
 uses UFfAvisoPermiso;
 
 procedure TFLogin.btnAceptarClick(Sender: TObject);
-var
-  vFramePermiso: TffAvisoPermiso;
 begin
-
-
-  // TabControl1.ActiveTab := TbMain;
 
   if not vUbicacionYaAceptada then
   begin
-    vFramePermiso := TffAvisoPermiso.Create(Self);
-    vFramePermiso.Parent := Self;
-    vFramePermiso.Align := TAlignLayout.center;
 
-    vFramePermiso.OnClose := procedure(Respuesta: Boolean)
-      begin
-        if Respuesta then
-        begin
-          getPermissions();
-        end;
-      end;
+    showFrameGPS;
 
   end
   else
-    TabControl1.ActiveTab := tbMain;
+  begin
+
+    if isGPSEnabled then
+    begin
+      vClima := true;
+      vUbicacionYaAceptada := true;
+      LocationSensor1.Active := true;
+      // TabControl1.ActiveTab := tbMain;
+
+      // getClima(vLatitudFinal, vLongitudfinal);
+
+    end
+    else
+    begin
+      ShowMessage('Debe prender el GPS, para poder obtener el clima');
+      Exit;
+    end;
+
+  end;
 
 end;
 
-procedure TFLogin.diaClick(Sender: TObject);
+procedure TFLogin.showFrameGPS;
+var
+  vFramePermiso: TffAvisoPermiso;
 begin
-  with rcMainBgg.Fill do
-  begin
-    Kind := TBrushKind.Gradient;
-    Gradient.Style := TGradientStyle.Linear;
-    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
-    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
+  vFramePermiso := TffAvisoPermiso.Create(Self);
+  vFramePermiso.Parent := Self;
+  vFramePermiso.Align := TAlignLayout.center;
 
-    Gradient.Color := $FF56CCF2; // Celeste cielo (inicio)
-    Gradient.Color1 := $FF2F80ED; // Azul profundo (fin)
+  vFramePermiso.OnClose := procedure(Respuesta: Boolean)
+    begin
+      if Respuesta then
+      begin
+        getPermissions();
+      end;
+    end;
+end;
+
+procedure TFLogin.Button1Click(Sender: TObject);
+begin
+  ShowMessage(vLatitudFinal);
+  ShowMessage(vLongitudfinal);
+end;
+
+procedure TFLogin.diaClick(Sender: TObject);
+var
+  vHttpClient: TNetHTTPClient;
+  vResponse: IHTTPResponse;
+  tStream: TMemoryStream;
+begin
+
+  vHttpClient := TNetHTTPClient.Create(nil);
+  tStream := TMemoryStream.Create;
+
+  try
+    vResponse := vHttpClient.Get
+      ('https://backend-clima-brown.vercel.app/public/despejado.png', tStream);
+
+    if vResponse.StatusCode = 200 then
+    begin
+      tStream.Position := 0;
+      imgWeatherIcon.Bitmap.LoadFromStream(tStream);
+    end;
+
+  finally
+    tStream.Free;
+    vHttpClient.Free;
   end;
 
 end;
@@ -129,29 +200,242 @@ end;
 
 procedure TFLogin.FormShow(Sender: TObject);
 begin
+  vLatitudFinal := '';
+  vLongitudfinal := '';
+  vClima := false;
+  // LocationSensor1.Active := true;
 
-  if isConexionToInternet then
-  begin
-
-    if TPermissionsService.DefaultService.IsEveryPermissionGranted
-      ([permAccess, permCoarse]) then
-      vUbicacionYaAceptada := true
-    else
-      vUbicacionYaAceptada := false;
-
-    if vUbicacionYaAceptada then
-    begin
-      ShowMessage('true')
-    end
-    else
-      ShowMessage('false');
-
-  end
-  else
+  if not isConexionToInternet then
   begin
     ShowMessage('No hay conexion a internet');
-    exit;
+    Exit;
   end;
+
+  if TPermissionsService.DefaultService.IsEveryPermissionGranted
+    ([permAccess, permCoarse]) then
+    vUbicacionYaAceptada := true
+  else
+    vUbicacionYaAceptada := false;
+
+end;
+
+procedure TFLogin.getClima(ALat, ALng: String);
+var
+  vThread: TThread;
+
+begin
+  { }
+
+  if (ALat.Trim = '') or (ALng.Trim = '') then
+  begin
+    ShowMessage
+      ('No hay datos de latitud o longitud. Cierre la app y vuelva a intentarlo.');
+    Exit;
+  end;
+
+  if not isConexionToInternet then
+  begin
+    ShowMessage('No hay conexion a internet');
+  end;
+
+  loadingOn;
+
+  vThread := TThread.CreateAnonymousThread(
+    procedure
+    var
+      vHttpClient: TNetHTTPClient;
+      vResponse: IHTTPResponse;
+      vJsonResponse: TJSONObject;
+      vURL, vWeatherText: string;
+    begin
+      vHttpClient := TNetHTTPClient.Create(nil);
+
+      try
+        try
+
+          vURL := 'https://backend-clima-brown.vercel.app/api/clima?lat=' + ALat
+            + '&lng=' + ALng;
+
+          if vURL.Trim = '' then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error en la ruta de peticion GET');
+              end);
+
+            Exit;
+          end;
+
+          vResponse := vHttpClient.Get(vURL);
+
+          if vResponse.StatusCode <> 200 then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error al hacer la peticion: Código ' +
+                  vResponse.StatusCode.ToString);
+
+                ShowMessage(vResponse.StatusText);
+              end);
+
+            Exit;
+          end;
+
+          vJsonResponse := TJSONObject.ParseJSONValue(vResponse.ContentAsString)
+            as TJSONObject;
+
+          if vJsonResponse = nil then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error 14011: No se han encontrado los datos.');
+              end);
+            Exit;
+          end;
+
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              loadData(vJsonResponse);
+
+              loadingOff;
+            end);
+
+        except
+          ON E: Exception Do
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage(E.Message);
+              end);
+          end;
+        end;
+      finally
+        vHttpClient.Free;
+      end;
+    end);
+
+  vThread.Start;
+
+end;
+
+procedure TFLogin.bcgDay;
+begin
+  with rcMainBgg.Fill do
+  begin
+    Kind := TBrushKind.Gradient;
+    Gradient.Style := TGradientStyle.Linear;
+
+    Gradient.Color := $FF56CCF2; // Celeste cielo (inicio)
+    Gradient.Color1 := $FF2F80ED; // Azul profundo (fin)
+  end;
+end;
+
+procedure TFLogin.bcgNight;
+begin
+  with rcMainBgg.Fill do
+  begin
+    Kind := TBrushKind.Gradient;
+    Gradient.Style := TGradientStyle.Linear;
+    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
+    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
+
+    Gradient.Color := $FF2C5364; // Azul profundo (fin)
+    Gradient.Color1 := $FF0F2027; // Celeste cielo (inicio)
+
+  end;
+end;
+
+procedure TFLogin.loadBackgroundColor(ADay: Boolean);
+begin
+
+  if ADay then
+    bcgDay
+  else
+    bcgNight;
+
+end;
+
+procedure TFLogin.loadData(AJsonResponse: TJSONObject);
+var
+  vDatosClima: RDatosClima;
+  vJCurrentWeather: TJSONObject;
+  vJDailyDays: TJSONObject;
+  vJArray_TempMax, vJArray_TempMin, vJArray_RainProb: TJSONArray;
+begin
+  { }
+
+  if AJsonResponse = nil then
+    Exit;
+
+  vDatosClima.Zona := AJsonResponse.GetValue<String>('timezone');
+  vJCurrentWeather := AJsonResponse.GetValue<TJSONObject>('current_weather');
+  vJDailyDays := AJsonResponse.GetValue<TJSONObject>('daily');
+
+  if vJCurrentWeather <> nil then
+  begin
+    vDatosClima.FechaHora := vJCurrentWeather.GetValue<String>('time');
+    vDatosClima.Temperatura := vJCurrentWeather.GetValue<Double>('temperature');
+    vDatosClima.VelViento := vJCurrentWeather.GetValue<Double>('windspeed');
+    vDatosClima.dia := StrToBool(vJCurrentWeather.GetValue<String>('is_day'));
+    vDatosClima.CodigoClima := vJCurrentWeather.GetValue<Integer>
+      ('weathercode');
+  end;
+
+  if vJDailyDays <> nil then
+  begin
+    vJArray_TempMax := vJDailyDays.GetValue<TJSONArray>('temperature_2m_max');
+    vJArray_TempMin := vJDailyDays.GetValue<TJSONArray>('temperature_2m_min');
+    vJArray_RainProb := vJDailyDays.GetValue<TJSONArray>
+      ('precipitation_probability_max');
+
+    if vJArray_TempMax.Count > 0 then
+      vDatosClima.TempMaxima := vJArray_TempMax.Items[0].AsType<Double>;
+
+    if vJArray_TempMin.Count > 0 then
+      vDatosClima.TempMinima := vJArray_TempMin.Items[0].AsType<Double>;
+
+    if vJArray_RainProb.Count > 0 then
+      vDatosClima.ProbLluvia := vJArray_RainProb.Items[0].AsType<Double>;
+
+  end;
+
+  loadBackgroundColor(vDatosClima.dia);
+  showData(vDatosClima);
+end;
+
+procedure TFLogin.loadingOff;
+begin
+  LyLoading.Visible := false;
+  AniIndicator1.Enabled := false;
+end;
+
+procedure TFLogin.loadingOn;
+begin
+  LyLoading.Visible := true;
+  AniIndicator1.Enabled := true;
+end;
+
+procedure TFLogin.showData(ADatosClima: RDatosClima);
+begin
+
+  TThread.Synchronize(nil,
+    procedure
+    begin
+      lblTitulo.Text := ADatosClima.Zona.Trim;
+      lblTempActual.Text := FloatToStr(ADatosClima.Temperatura).Trim;
+      lblTempMax.Text := FloatToStr(ADatosClima.TempMaxima).Trim;
+      lblTempMin.Text := FloatToStr(ADatosClima.TempMinima).Trim;
+      TabControl1.ActiveTab := tbMain;
+    end);
 
 end;
 
@@ -170,43 +454,37 @@ begin
       begin
         vUbicacionYaAceptada := true;
         LocationSensor1.Active := true;
-        TabControl1.ActiveTab := tbMain;
 
-
-
-
-
-
-        // if vUbicacionYaAceptada then
-        // begin
-        // ShowMessage('ttttttttttt');
-        // TabControl1.ActiveTab := tbMain;
-        // end
-        // else
-        // begin
-        // ShowMessage('fffffffffff');
-        // LocationSensor1.Active := true;
-        // end;
+        if isGPSEnabled then
+        begin
+          // TabControl1.ActiveTab := tbMain;
+          vClima := true;
+        end
+        else
+        begin
+          ShowMessage('Debe prender el GPS, para poder obtener el clima');
+          Exit;
+        end;
 
       end
       else
       begin
+
         vUbicacionYaAceptada := false;
         LocationSensor1.Active := false;
+
+        {
+          Dos opciones
+          1- Mandar a otro formulario
+          - Que vuelva a pedir los permisos
+
+          1- Que lo ponga manualmente, sin pedirle el permiso
+
+        }
+
       end;
 
     end);
-
-  // if vUbicacionYaAceptada then
-  // begin
-  // ShowMessage('true');
-  // result := true;
-  // end
-  // else
-  // begin
-  // ShowMessage('false');
-  // result := false;
-  // end;
 
 end;
 
@@ -252,21 +530,20 @@ const OldLocation, NewLocation: TLocationCoord2D);
 begin
   edtlat.Text := Format('Lat: %f', [NewLocation.Latitude]);
   edtlng.Text := Format('Lat: %f', [NewLocation.Longitude]);
-end;
 
-procedure TFLogin.nocheClick(Sender: TObject);
-begin
-  with rcMainBgg.Fill do
+  vLatitudFinal := Format('%f', [NewLocation.Latitude]);
+  vLongitudfinal := Format('%f', [NewLocation.Longitude]);
+  // ShowMessage(vLatitudFinal + ' /// ' + vLongitudfinal);
+
+  if vClima then
   begin
-    Kind := TBrushKind.Gradient;
-    Gradient.Style := TGradientStyle.Linear;
-    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
-    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
 
-    Gradient.Color := $FF2C5364; // Azul profundo (fin)
-    Gradient.Color1 := $FF0F2027; // Celeste cielo (inicio)
-
+    getClima(vLatitudFinal, vLongitudfinal);
+    // TabControl1.ActiveTab := tbMain;
   end;
+
+  vClima := false;
+
 end;
 
 end.
