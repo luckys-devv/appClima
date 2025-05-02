@@ -1,0 +1,1134 @@
+unit ULogin;
+
+interface
+
+uses
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Sensors,
+  System.Generics.Collections,
+  System.Sensors.Components, FMX.Layouts, FMX.Edit, FMX.Graphics,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
+  System.Net.HttpClient, System.Net.URLClient, System.JSON,
+  System.Net.HttpClientComponent,
+  // Unidades clave para permisos en Android
+  System.Permissions,
+  androidapi.Helpers,
+  androidapi.JNI.GraphicsContentViewText,
+  androidapi.JNI.JavaTypes,
+  androidapi.JNIBridge,
+  androidapi.JNI.Os,
+  androidapi.JNI.Location,
+  FMX.Helpers.Android,
+  androidapi.JNI.Net,
+  FMX.Controls.Presentation, FMX.Objects, System.IOUtils, FMX.TabControl,
+  URDatosClima, URDatosDiasClima,
+  FMX.Memo.Types, androidapi.JNI.Provider,
+  FMX.ScrollBox, FMX.Memo, System.ImageList, FMX.ImgList;
+
+type
+  TFLogin = class(TForm)
+    TabControl1: TTabControl;
+    tbLogin: TTabItem;
+    tbTestMain: TTabItem;
+    rcMainBgg: TRectangle;
+    tbWarning: TTabItem;
+    rcLoginBg: TRectangle;
+    Image1: TImage;
+    Layout3: TLayout;
+    Label1: TLabel;
+    edtUser: TEdit;
+    Rectangle3: TRectangle;
+    btnAceptar: TSpeedButton;
+    LyClimaActual: TLayout;
+    LyTitulo: TLayout;
+    imgWeatherIcon: TImage;
+    LyTemperatura: TLayout;
+    edtlat: TEdit;
+    edtlng: TEdit;
+    LocationSensor1: TLocationSensor;
+    Button1: TButton;
+    LyTemp_Actual: TLayout;
+    LyTemp_MM: TLayout;
+    lblTempActual: TLabel;
+    lblTempMax: TLabel;
+    lblTempMin: TLabel;
+    lblTitulo: TLabel;
+    Rectangle1: TRectangle;
+    Layout1: TLayout;
+    Image2: TImage;
+    LyLoading: TLayout;
+    AniIndicator1: TAniIndicator;
+    Layout2: TLayout;
+    Layout4: TLayout;
+    txtAviso: TText;
+    Layout5: TLayout;
+    Rectangle2: TRectangle;
+    btnAceptar_TbWarning: TSpeedButton;
+    tbMain: TTabItem;
+    rcRealMainbgg: TRectangle;
+    LyClimaPrincipal: TLayout;
+    LyTituloCiudad: TLayout;
+    lblTitulo_tbMain: TLabel;
+    LyCardClimaActual: TLayout;
+    rcClimaPrincipal: TRectangle;
+    LyClient_CCP: TLayout;
+    lblPanorama_CCP: TLabel;
+    LyTemp: TLayout;
+    lblTempActual_CCP: TLabel;
+    Layout21: TLayout;
+    imgWeather_CCP: TImage;
+    lblSensacion_CCP: TLabel;
+    LyLluvias: TLayout;
+    lblLuvias_CCP: TLabel;
+    LyClimaDias: TLayout;
+    Layout22: TLayout;
+    rcHoy_tbMain: TRectangle;
+    LyHoy: TLayout;
+    LyHoy_Datos: TLayout;
+    rcHoy_lblDia: TLabel;
+    rcHoy_lblFecha: TLabel;
+    LyHoy_Img: TLayout;
+    rcHoy_ImgHoy: TImage;
+    LyHoy_MinMax: TLayout;
+    rcHoy_lblMaxHoy: TLabel;
+    rcHoy_lblMinHoy: TLabel;
+    rcDay4_tbMain: TRectangle;
+    LyDay4: TLayout;
+    LyDay4_Datos: TLayout;
+    RcDay4_Dia: TLabel;
+    RcDay4_Fecha: TLabel;
+    LyDay4_Img: TLayout;
+    RcDay4_Img: TImage;
+    LyDay4_MinMax: TLayout;
+    RcDay4_lblMax: TLabel;
+    RcDay4_lblMin: TLabel;
+    rcDay3_tbMain: TRectangle;
+    LyDay3: TLayout;
+    LyDay3_Datos: TLayout;
+    rcDay3_lblDia: TLabel;
+    rcDay3_lblFecha: TLabel;
+    LyDay3Img: TLayout;
+    rcDay3_Img: TImage;
+    LyDay3MinMax: TLayout;
+    rcDay3_lblMax: TLabel;
+    rcDay3_lblMin: TLabel;
+    rcDay2_tbMain: TRectangle;
+    LyDay2: TLayout;
+    LyDay2_Datos: TLayout;
+    rcDay2_lblDia: TLabel;
+    rcDay2_lblFecha: TLabel;
+    LyDay2_img: TLayout;
+    rcDay2_Img: TImage;
+    LyDay2_MinMax: TLayout;
+    RcDay2_Max: TLabel;
+    RcDay2_Min: TLabel;
+    rcDay1_tbMain: TRectangle;
+    LyDay1: TLayout;
+    LyDay1_Datos: TLayout;
+    rcDay1_lblDia: TLabel;
+    rcDay1_lblFecha: TLabel;
+    LyDay1_Img: TLayout;
+    rcDay1_img: TImage;
+    LyDay1_MinMax: TLayout;
+    rcDay1_Max: TLabel;
+    rcDay1_Min: TLabel;
+    rcManiana_tbMain: TRectangle;
+    LyManiana: TLayout;
+    LyManiana_Datos: TLayout;
+    RcManiana_lblDia: TLabel;
+    rcManiana_lblFecha: TLabel;
+    LyManiana_Img: TLayout;
+    rcManiana_img: TImage;
+    LyManiana_MinMax: TLayout;
+    rcManiana_lblMax: TLabel;
+    rcManiana_lblMin: TLabel;
+    lblSpeedWin_CCP: TLabel;
+    lblHumedad: TLabel;
+    procedure edtUserValidate(Sender: TObject; var Text: string);
+    procedure edtPassValidate(Sender: TObject; var Text: string);
+    procedure FormShow(Sender: TObject);
+    procedure btnAceptarClick(Sender: TObject);
+    procedure LocationSensor1LocationChanged(Sender: TObject;
+      const OldLocation, NewLocation: TLocationCoord2D);
+    procedure btnAceptar_TbWarningClick(Sender: TObject);
+  private
+    { Private declarations }
+    vLatitudFinal: String;
+    vLongitudfinal: String;
+    vUbicacionYaAceptada: Boolean;
+    vClima: Boolean;
+    function getPermissions: Boolean;
+    function isConexionToInternet: Boolean;
+    function isGPSEnabled: Boolean;
+    procedure AbrirConfiguracionAplicacion;
+    procedure getClima(ALat, ALng: String);
+    procedure showFrameGPS;
+    procedure loadData(AJsonResponse: TJSONObject);
+    procedure loadBackgroundColor(ADay: Boolean);
+    procedure bcgNight;
+    procedure bcgDay;
+    procedure showDataMainCard(ADatosClima: RDatosClima);
+    procedure showDataDaysCard(vCurrentDay, vTommorowDay, VDay1, vDay2, vDay3,
+      vDay4: RDatosDiasClima);
+    procedure getCurrentDay(ADatoDia: RDatosDiasClima);
+    procedure getTomorrowDay(ADatoDia: RDatosDiasClima);
+    procedure getOneDay(ADatoDia: RDatosDiasClima);
+    procedure getSecondDay(ADatoDia: RDatosDiasClima);
+    procedure getThirdDay(ADatoDia: RDatosDiasClima);
+    procedure getFordDay(ADatoDia: RDatosDiasClima);
+    procedure loadingOn;
+    procedure loadingOff;
+    procedure loadImg(ATipoClima: String);
+    procedure loadImgDays(ATipoClima: String; AIndex: Integer);
+    function getNombreImg(ACodeWeather: Integer): String;
+    function getCondicionClima(ACodeWeather: Integer): String;
+    function cargarClimaDias(ATime, AWeatherCode, AMax, AMin: TJSONArray)
+      : TArray<RDatosDiasClima>;
+  public
+    { Public declarations }
+
+  end;
+
+var
+  FLogin: TFLogin;
+
+const
+  permAccess = 'android.permission.ACCESS_FINE_LOCATION';
+  permCoarse = 'android.permission.ACCESS_COARSE_LOCATION';
+
+implementation
+
+{$R *.fmx}
+
+uses UFfAvisoPermiso;
+
+procedure TFLogin.btnAceptarClick(Sender: TObject);
+begin
+
+  if not vUbicacionYaAceptada then
+  begin
+
+    showFrameGPS;
+
+  end
+  else
+  begin
+
+    if isGPSEnabled then
+    begin
+      vClima := true;
+      vUbicacionYaAceptada := true;
+      LocationSensor1.Active := true;
+
+    end
+    else
+    begin
+      ShowMessage('Debe prender el GPS, para poder obtener el clima');
+      Exit;
+    end;
+
+  end;
+
+end;
+
+procedure TFLogin.btnAceptar_TbWarningClick(Sender: TObject);
+begin
+  AbrirConfiguracionAplicacion;
+  ShowMessage('donde');
+
+  if TPermissionsService.DefaultService.IsEveryPermissionGranted
+    ([permAccess, permCoarse]) then
+    ShowMessage('si')
+  else
+    ShowMessage('no');
+
+end;
+
+procedure TFLogin.showFrameGPS;
+var
+  vFramePermiso: TffAvisoPermiso;
+begin
+  vFramePermiso := TffAvisoPermiso.Create(Self);
+  vFramePermiso.Parent := Self;
+  vFramePermiso.Align := TAlignLayout.center;
+
+  vFramePermiso.OnClose := procedure(Respuesta: Boolean)
+    begin
+      if Respuesta then
+      begin
+        getPermissions();
+      end;
+    end;
+end;
+
+procedure TFLogin.loadImg(ATipoClima: String);
+var
+  vHttpClient: TNetHTTPClient;
+  vResponse: IHTTPResponse;
+  tStream: TMemoryStream;
+begin
+
+  if ATipoClima <> '' then
+  begin
+
+    vHttpClient := TNetHTTPClient.Create(nil);
+    tStream := TMemoryStream.Create;
+
+    try
+      vResponse := vHttpClient.Get
+        ('https://backend-clima-brown.vercel.app/public/' + ATipoClima,
+        tStream);
+
+      if vResponse.StatusCode = 200 then
+      begin
+        tStream.Position := 0;
+        imgWeather_CCP.Bitmap.LoadFromStream(tStream);
+        // Image3.Bitmap.LoadFromStream(tStream);
+      end;
+
+    finally
+      tStream.Free;
+      vHttpClient.Free;
+    end;
+
+  end;
+
+end;
+
+procedure TFLogin.loadImgDays(ATipoClima: String; AIndex: Integer);
+var
+  vHttpClient: TNetHTTPClient;
+  vResponse: IHTTPResponse;
+  tStream: TMemoryStream;
+begin
+
+  if ATipoClima <> '' then
+  begin
+
+    vHttpClient := TNetHTTPClient.Create(nil);
+    tStream := TMemoryStream.Create;
+
+    try
+      vResponse := vHttpClient.Get
+        ('https://backend-clima-brown.vercel.app/public/' + ATipoClima,
+        tStream);
+
+      if vResponse.StatusCode = 200 then
+      begin
+        tStream.Position := 0;
+
+        case AIndex of
+          0:
+            begin
+              rcHoy_ImgHoy.Bitmap.LoadFromStream(tStream);
+            end;
+
+          1:
+            begin
+              rcManiana_img.Bitmap.LoadFromStream(tStream);
+            end;
+
+          2:
+            begin
+              rcDay1_img.Bitmap.LoadFromStream(tStream);
+            end;
+
+          3:
+            begin
+              rcDay2_Img.Bitmap.LoadFromStream(tStream);
+            end;
+
+          4:
+            begin
+              rcDay3_Img.Bitmap.LoadFromStream(tStream);
+            end;
+
+          5:
+            begin
+              RcDay4_Img.Bitmap.LoadFromStream(tStream);
+            end;
+
+        end;
+
+        // Image3.Bitmap.LoadFromStream(tStream);
+      end;
+
+    finally
+      tStream.Free;
+      vHttpClient.Free;
+    end;
+
+  end;
+
+end;
+
+procedure TFLogin.edtPassValidate(Sender: TObject; var Text: string);
+begin
+  btnAceptar.SetFocus;
+end;
+
+procedure TFLogin.edtUserValidate(Sender: TObject; var Text: string);
+begin
+  btnAceptar.SetFocus;
+end;
+
+procedure TFLogin.FormShow(Sender: TObject);
+begin
+  vLatitudFinal := '';
+  vLongitudfinal := '';
+  vClima := false;
+  // LocationSensor1.Active := true;
+
+  if not isConexionToInternet then
+  begin
+    ShowMessage('No hay conexion a internet');
+    Exit;
+  end;
+
+  if TPermissionsService.DefaultService.IsEveryPermissionGranted
+    ([permAccess, permCoarse]) then
+    vUbicacionYaAceptada := true
+  else
+    vUbicacionYaAceptada := false;
+
+end;
+
+procedure TFLogin.getClima(ALat, ALng: String);
+var
+  vThread: TThread;
+begin
+  { }
+
+  if (ALat.Trim = '') or (ALng.Trim = '') then
+  begin
+    ShowMessage
+      ('No hay datos de latitud o longitud. Cierre la app y vuelva a intentarlo.');
+    Exit;
+  end;
+
+  if not isConexionToInternet then
+  begin
+    ShowMessage('No hay conexion a internet');
+  end;
+  ShowMessage('sada');
+  loadingOn;
+
+  vThread := TThread.CreateAnonymousThread(
+    procedure
+    var
+      vHttpClient: TNetHTTPClient;
+      vResponse: IHTTPResponse;
+      vJsonResponse: TJSONObject;
+      JsonValue: TJSONValue;
+      vURL, vWeatherText: string;
+    begin
+      vHttpClient := TNetHTTPClient.Create(nil);
+
+      try
+        try
+
+          vURL := 'https://backend-clima-brown.vercel.app/api/clima?lat=' + ALat
+            + '&lng=' + ALng;
+
+          if vURL.Trim = '' then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error en la ruta de peticion GET');
+              end);
+
+            Exit;
+          end;
+
+          vResponse := vHttpClient.Get(vURL);
+
+          if vResponse.StatusCode <> 200 then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error al hacer la peticion: Código ' +
+                  vResponse.StatusCode.ToString);
+
+                ShowMessage(vResponse.StatusText);
+              end);
+
+            Exit;
+          end;
+
+          // vJsonResponse := TJSONObject.ParseJSONValue(vResponse.ContentAsString)
+          // as TJSONObject;
+
+          JsonValue := TJSONObject.ParseJSONValue(vResponse.ContentAsString);
+
+          vJsonResponse := TJSONArray(JsonValue).Items[0] as TJSONObject;
+
+          // TThread.Synchronize(nil,
+          // procedure
+          // begin
+          // ShowMessage(vJsonResponse.ToString);
+          // Memo1.Lines.Add(vJsonResponse.ToString);
+          // end);
+
+          if JsonValue = nil then
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error 14011: No se han encontrado los datos.');
+              end);
+            Exit;
+          end;
+
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              loadData(vJsonResponse);
+              loadingOff;
+            end);
+
+        except
+          ON E: Exception Do
+          begin
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                loadingOff;
+                ShowMessage('Error : ' + E.Message + ' - ' + E.ClassName);
+              end);
+          end;
+        end;
+      finally
+        vHttpClient.Free;
+      end;
+    end);
+
+  vThread.Start;
+
+end;
+
+procedure TFLogin.AbrirConfiguracionAplicacion;
+var
+  Intent: JIntent;
+  URI: Jnet_Uri;
+begin
+  URI := TJnet_Uri.JavaClass.fromParts(StringToJString('package'),
+    TAndroidHelper.Context.getPackageName, nil);
+
+  Intent := TJIntent.Create;
+  Intent.setAction(TJSettings.JavaClass.ACTION_APPLICATION_DETAILS_SETTINGS);
+  Intent.setData(URI);
+  Intent.setFlags(TJIntent.JavaClass.FLAG_ACTIVITY_NEW_TASK);
+
+  TAndroidHelper.Context.startActivity(Intent);
+end;
+
+procedure TFLogin.bcgDay;
+begin
+
+  with rcRealMainbgg.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF56CCF2;
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $FF56CCF2; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2F80ED; // Azul profundo (fin)
+  end;
+
+  with rcClimaPrincipal.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcHoy_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcManiana_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcDay1_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcDay2_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcDay3_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+    //
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+  with rcDay4_tbMain.Fill do
+  begin
+    // Kind := TBrushKind.Gradient;
+    // Gradient.Style := TGradientStyle.Linear;
+
+    // Gradient.Color := $AA1E88E5; // Celeste cielo (inicio)
+    // Gradient.Color1 := $FF2C3E50; // Azul profundo (fin)
+
+    Kind := TBrushKind.Solid;
+    Color := $AA1E88E5;
+  end;
+
+end;
+
+procedure TFLogin.bcgNight;
+begin
+
+  with rcRealMainbgg.Fill do
+  begin
+    Kind := TBrushKind.Gradient;
+    Gradient.Style := TGradientStyle.Linear;
+    // Gradient.StartPosition := PointF(0, 0);    // Desde arriba
+    // Gradient.StopPosition := PointF(0, 1);     // Hacia abajo
+
+    Gradient.Color := $FF2C5364; // Azul profundo (fin)
+    Gradient.Color1 := $FF0F2027; // Celeste cielo (inicio)
+
+  end;
+
+  with rcClimaPrincipal.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcHoy_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcManiana_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcDay1_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcDay2_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcDay3_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+  with rcDay4_tbMain.Fill do
+  begin
+    Kind := TBrushKind.Solid;
+    Color := $FF2E3B4E;
+  end;
+
+end;
+
+procedure TFLogin.loadBackgroundColor(ADay: Boolean);
+begin
+
+  if ADay then
+    bcgDay
+  else
+    bcgNight;
+
+end;
+
+procedure TFLogin.loadData(AJsonResponse: TJSONObject);
+var
+  vDatosClima: RDatosClima;
+  vArrDatosDiasClima: TArray<RDatosDiasClima>;
+  vCurrentDay, vTommorowDay, VDay1, vDay2, vDay3, vDay4: RDatosDiasClima;
+  vNombreImg: String;
+  { - }
+  vJCurrentWeather: TJSONObject;
+  vJDailyDays: TJSONObject;
+  { - }
+  vJArray_RainProb, vJArray_Time, vJArray_WeatherCode, vJArray_Max,
+    vJArray_Min: TJSONArray;
+  asda: TJSONObject;
+begin
+
+  if AJsonResponse = nil then
+    Exit;
+
+  vDatosClima.Zona := AJsonResponse.GetValue<String>('timezone');
+
+  vJCurrentWeather := AJsonResponse.GetValue<TJSONObject>('current');
+  vJDailyDays := AJsonResponse.GetValue<TJSONObject>('daily');
+
+  if vJCurrentWeather <> nil then
+  begin
+    vDatosClima.FechaHora := vJCurrentWeather.GetValue<String>('time');
+    vDatosClima.Temperatura := vJCurrentWeather.GetValue<Double>
+      ('temperature_2m');
+    vDatosClima.VelViento := vJCurrentWeather.GetValue<Double>
+      ('wind_speed_10m');
+    vDatosClima.Humedad := vJCurrentWeather.GetValue<Double>
+      ('relative_humidity_2m');
+    vDatosClima.SensacionT := vJCurrentWeather.GetValue<Double>
+      ('apparent_temperature');
+    vDatosClima.dia := StrToBool(vJCurrentWeather.GetValue<String>('is_day'));
+    vDatosClima.CodigoClima := vJCurrentWeather.GetValue<Integer>
+      ('weather_code');
+  end;
+
+  if vJDailyDays <> nil then
+  begin
+    vJArray_Time := vJDailyDays.GetValue<TJSONArray>('time');
+
+    vJArray_WeatherCode := vJDailyDays.GetValue<TJSONArray>('weather_code');
+
+    vJArray_Max := vJDailyDays.GetValue<TJSONArray>('temperature_2m_max');
+
+    vJArray_Min := vJDailyDays.GetValue<TJSONArray>('temperature_2m_min');
+
+    vJArray_RainProb := vJDailyDays.GetValue<TJSONArray>
+      ('precipitation_probability_max');
+
+    SetLength(vArrDatosDiasClima, vJArray_Time.Count);
+
+    if vJArray_Time.Count > 0 then
+      vArrDatosDiasClima := cargarClimaDias(vJArray_Time, vJArray_WeatherCode,
+        vJArray_Max, vJArray_Min);
+
+    if vJArray_RainProb.Count > 0 then
+      vDatosClima.ProbLluvia := vJArray_RainProb.Items[0].AsType<Double>;
+
+  end;
+
+  vNombreImg := getNombreImg(vDatosClima.CodigoClima);
+  vDatosClima.CondicionClima := getCondicionClima(vDatosClima.CodigoClima);
+
+  vCurrentDay := vArrDatosDiasClima[0];
+  vTommorowDay := vArrDatosDiasClima[1];
+  VDay1 := vArrDatosDiasClima[2];
+  vDay2 := vArrDatosDiasClima[3];
+  vDay3 := vArrDatosDiasClima[4];
+  vDay4 := vArrDatosDiasClima[5];
+
+
+  // for var i := 0 to Length(vArrDatosDiasClima) - 1 do
+  // showDataDaysCard(i, vArrDatosDiasClima[i]);
+
+  TThread.Synchronize(nil,
+    procedure
+    begin
+
+      loadBackgroundColor(vDatosClima.dia);
+      showDataMainCard(vDatosClima);
+      showDataDaysCard(vCurrentDay, vTommorowDay, VDay1, vDay2, vDay3, vDay4);
+
+      if vNombreImg <> '' then
+        loadImg(vNombreImg);
+
+    end);
+
+end;
+
+procedure TFLogin.showDataDaysCard(vCurrentDay, vTommorowDay, VDay1, vDay2,
+  vDay3, vDay4: RDatosDiasClima);
+begin
+
+  getCurrentDay(vCurrentDay);
+  getTomorrowDay(vTommorowDay);
+  getOneDay(VDay1);
+  getSecondDay(vDay2);
+  getThirdDay(vDay3);
+  getFordDay(vDay4);
+
+end;
+
+procedure TFLogin.getCurrentDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre, vDiaSemana: String;
+  Fecha: TDate;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 0);
+
+  Fecha := StrToDate(ADatoDia.Fecha);
+  vDiaSemana := FormatDateTime('dddd', Fecha);
+  if vDiaSemana <> '' then
+    rcHoy_lblDia.Text := vDiaSemana
+  else
+    rcHoy_lblDia.Text := '';
+
+  rcHoy_lblFecha.Text := ADatoDia.Fecha;
+
+  rcHoy_lblMaxHoy.Text := FloatToStr(ADatoDia.Max).Trim;
+  rcHoy_lblMinHoy.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+procedure TFLogin.getTomorrowDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre: String;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 1);
+  RcManiana_lblDia.Text := '';
+  rcManiana_lblFecha.Text := ADatoDia.Fecha;
+  rcManiana_lblMax.Text := FloatToStr(ADatoDia.Max).Trim;
+  rcManiana_lblMin.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+procedure TFLogin.getOneDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre: String;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 2);
+  rcDay1_lblDia.Text := '';
+  rcDay1_lblFecha.Text := ADatoDia.Fecha;
+  rcDay1_Max.Text := FloatToStr(ADatoDia.Max).Trim;
+  rcDay1_Min.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+procedure TFLogin.getSecondDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre: String;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 3);
+  rcDay2_lblDia.Text := '';
+  rcDay2_lblFecha.Text := ADatoDia.Fecha;
+  RcDay2_Max.Text := FloatToStr(ADatoDia.Max).Trim;
+  RcDay2_Min.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+procedure TFLogin.getThirdDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre: String;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 4);
+  rcDay3_lblDia.Text := '';
+  rcDay3_lblFecha.Text := ADatoDia.Fecha;
+  rcDay3_lblMax.Text := FloatToStr(ADatoDia.Max).Trim;
+  rcDay3_lblMin.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+procedure TFLogin.getFordDay(ADatoDia: RDatosDiasClima);
+var
+  vNombre: String;
+begin
+  { }
+  vNombre := '';
+  vNombre := getNombreImg(ADatoDia.WeatherCode);
+
+  if vNombre <> '' then
+    loadImgDays(vNombre, 5);
+  RcDay4_Dia.Text := '';
+  RcDay4_Fecha.Text := ADatoDia.Fecha;
+  RcDay4_lblMax.Text := FloatToStr(ADatoDia.Max).Trim;
+  RcDay4_lblMin.Text := FloatToStr(ADatoDia.Min).Trim;
+end;
+
+function TFLogin.cargarClimaDias(ATime, AWeatherCode, AMax, AMin: TJSONArray)
+  : TArray<RDatosDiasClima>;
+var
+  vCantDias: Integer;
+begin
+  { }
+  vCantDias := 0;
+
+  With result[vCantDias] Do
+  begin
+    dia := '';
+    Fecha := '';
+    WeatherCode := -1;
+    Max := 0.0;
+    Min := 0.0;
+  end;
+
+  vCantDias := ATime.Count;
+  SetLength(result, vCantDias);
+
+  for var i := 0 to vCantDias - 1 do
+  begin
+    result[i].Fecha := ATime[i].Value;
+    result[i].WeatherCode := AWeatherCode.Items[i].GetValue<Integer>;
+    result[i].Max := AMax.Items[i].GetValue<Double>;
+    result[i].Min := AMin.Items[i].GetValue<Double>;
+  end;
+
+end;
+
+function TFLogin.getCondicionClima(ACodeWeather: Integer): String;
+begin
+  result := '';
+
+  case ACodeWeather of
+    0:
+      result := 'Cielo despejado';
+    1:
+      result := 'Mayormente despejado';
+    2:
+      result := 'Parcialmente nublado';
+    3:
+      result := 'Nublado';
+    45:
+      result := 'Neblina';
+    51 .. 61:
+      result := 'Lluvia ligera';
+    63:
+      result := 'Lluvia moderada';
+    65:
+      result := 'Lluvia fuerte';
+    80 .. 86:
+      result := 'Chubascos fuertes';
+    95:
+      result := 'Tormentas';
+    96 .. 99:
+      result := 'Tormentas Fuertes';
+
+  end;
+end;
+
+function TFLogin.getNombreImg(ACodeWeather: Integer): String;
+begin
+  result := '';
+
+  case ACodeWeather of
+    0:
+      result := 'despejado.png';
+    1:
+      result := 'mayordespejado.png';
+    2:
+      result := 'nubladoparcial.png';
+    3:
+      result := 'nublado.png';
+    45:
+      result := 'neblina.png';
+    51 .. 61:
+      result := 'rainiligera.png';
+    63:
+      result := 'moderada.png';
+    65:
+      result := 'fuerte.png';
+    80 .. 86:
+      result := 'fuerte.png';
+    95:
+      result := 'tormenta.png';
+    96 .. 99:
+      result := 'thunderstorm.png';
+
+  end;
+end;
+
+procedure TFLogin.loadingOff;
+begin
+  LyLoading.Visible := false;
+  AniIndicator1.Enabled := false;
+end;
+
+procedure TFLogin.loadingOn;
+begin
+  LyLoading.Visible := true;
+  AniIndicator1.Enabled := true;
+end;
+
+procedure TFLogin.showDataMainCard(ADatosClima: RDatosClima);
+begin
+
+  lblTempActual_CCP.Text := FloatToStr(ADatosClima.Temperatura).Trim + '°';
+  lblTitulo_tbMain.Text := ADatosClima.Zona.Trim;
+  lblLuvias_CCP.Text := 'Lluvias: ' + FloatToStr(ADatosClima.ProbLluvia)
+    .Trim + ' mm';
+  lblSpeedWin_CCP.Text := 'Viento: ' + FloatToStr(ADatosClima.VelViento).Trim
+    + ' km/h';
+  lblSensacion_CCP.Text := 'Sensacion termica: ' +
+    FloatToStr(ADatosClima.SensacionT).Trim + '°';
+  lblHumedad.Text := 'Humedad: ' + FloatToStr(ADatosClima.Humedad).Trim + '%';
+  lblPanorama_CCP.Text := ADatosClima.CondicionClima;
+
+  TabControl1.ActiveTab := tbMain;
+
+end;
+
+function TFLogin.getPermissions: Boolean;
+begin
+  result := false;
+
+  PermissionsService.RequestPermissions
+    (['android.permission.ACCESS_FINE_LOCATION',
+    'android.permission.ACCESS_COARSE_LOCATION'],
+    procedure(const APermissions: TClassicStringDynArray;
+      const AGrantResults: TClassicPermissionStatusDynArray)
+    begin
+      if (Length(AGrantResults) > 0) and
+        (AGrantResults[0] = TPermissionStatus.Granted) then
+      begin
+        vUbicacionYaAceptada := true;
+        LocationSensor1.Active := true;
+
+        if isGPSEnabled then
+        begin
+          vClima := true;
+        end
+        else
+        begin
+          ShowMessage('Debe prender el GPS, para poder obtener el clima');
+          Exit;
+        end;
+
+      end
+      else
+      begin
+
+        vUbicacionYaAceptada := false;
+        LocationSensor1.Active := false;
+        TabControl1.ActiveTab := tbWarning;
+        {
+          Dos opciones
+          1- Mandar a otro formulario
+          - Que vuelva a pedir los permisos
+
+          1- Que lo ponga manualmente, sin pedirle el permiso
+
+        }
+
+      end;
+
+    end);
+
+end;
+
+function TFLogin.isConexionToInternet: Boolean;
+var
+  ConnectivityManager: JConnectivityManager;
+  ActiveNetworkInfo: JNetworkInfo;
+begin
+  ConnectivityManager := TJConnectivityManager.Wrap
+    (TAndroidHelper.Context.getSystemService
+    (TJContext.JavaClass.CONNECTIVITY_SERVICE));
+
+  if ConnectivityManager <> nil then
+  begin
+    // Obtenemos información de la red activa
+    ActiveNetworkInfo := ConnectivityManager.getActiveNetworkInfo;
+    // Verificamos si no es nula y si está conectada
+    result := (ActiveNetworkInfo <> nil) and
+      (ActiveNetworkInfo.isConnectedOrConnecting);
+  end
+  else
+    result := false;
+
+end;
+
+function TFLogin.isGPSEnabled: Boolean;
+var
+  LocationManager: JLocationManager;
+begin
+
+  // Obtiene el servicio de ubicación desde el contexto de Android
+  LocationManager := TJLocationManager.Wrap
+    (TAndroidHelper.Context.getSystemService
+    (TJContext.JavaClass.LOCATION_SERVICE));
+  // Verifica si el proveedor GPS está habilitado
+  result := LocationManager.isProviderEnabled
+    (TJLocationManager.JavaClass.GPS_PROVIDER);
+
+end;
+
+procedure TFLogin.LocationSensor1LocationChanged(Sender: TObject;
+const OldLocation, NewLocation: TLocationCoord2D);
+begin
+  // edtlat.Text := Format('Lat: %f', [NewLocation.Latitude]);
+  // edtlng.Text := Format('Lat: %f', [NewLocation.Longitude]);
+
+  vLatitudFinal := Format('%f', [NewLocation.Latitude]);
+  vLongitudfinal := Format('%f', [NewLocation.Longitude]);
+
+  if vClima then
+  begin
+    getClima(vLatitudFinal, vLongitudfinal);
+    // TabControl1.ActiveTab := tbMain;
+  end;
+
+  vClima := false;
+
+end;
+
+end.

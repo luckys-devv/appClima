@@ -1,0 +1,12 @@
+unit URDatosDiasClima;
+
+interface
+
+  type
+    RDatosDiasClima = record
+
+    end;
+
+implementation
+
+end.

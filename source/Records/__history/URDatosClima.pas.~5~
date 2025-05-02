@@ -1,0 +1,26 @@
+unit URDatosClima;
+
+interface
+
+
+
+  type
+    RDatosClima = record
+      Zona: String;
+      FechaHora: String;
+      CondicionClima: String;
+      Temperatura: Double;
+      VelViento: Double;
+      Dia: Boolean;
+      CodigoClima: Integer;
+      TempMaxima: Double;
+      TempMinima: Double;
+      ProbLluvia: Double;
+      Humedad: Double;
+      SensacionT: Double;
+    end;
+
+
+implementation
+
+end.
